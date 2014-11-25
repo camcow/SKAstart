@@ -41,3 +41,13 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+data/
+*.sdf
+MS_VS10/app0001/Debug
+MS_VS10/app0002/Debug
+MS_VS10/app0003/Debug
+MS_VS10/app0004/Debug
+MS_VS10/app0005/Debug
+MS_VS10/skadll/Debug
+MS_VS10/Debug
