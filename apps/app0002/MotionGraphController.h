@@ -4,6 +4,7 @@
 #include <Core/SystemConfiguration.h>
 #include <Animation/MotionController.h>
 #include <Windows.h>
+#include <vector>
 using namespace std;
 class MotionGraphController : public MotionController
 {

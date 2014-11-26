@@ -55,32 +55,24 @@ void MotionGraph::fileReader(string filename)
 		tempFrameCount++;
 	}
 	int size = frames.size();
-	cout << endl << "vertexNumber is " << vertexNumber << endl;
-	cout << endl << "num frames is " << size << endl;
+	//cout << endl << "vertexNumber is " << vertexNumber << endl;
+	//cout << endl << "num frames is " << size << endl;
 
 	//Now we can initialize our graph using iterators from our above vector
 	unsigned int i;
 	
-	//if we have already added to that graph
-		cout << "adding " << tempFrameCount << endl;
+	
+		//cout << "adding " << tempFrameCount << endl;
 		for (int k = 0; k < tempFrameCount; k++)
 		{
 			add_vertex(dgraph);
 		}
 
-		if (size>400)
-		{
-			//dgraph[400].frame_data.fileName = "cameron Test";
-			//cout << dgraph[400].frame_data.fileName << endl;
-		}
-	
-		//dgraph = DirectedGraph(size);
 
 	pair<vertex_iter, vertex_iter> vp;
 	for (vp = vertices(dgraph), i = 0; vp.first != vp.second; ++vp.first, i++) {
 		DirectedGraph::vertex_descriptor v = *(vp.first);
 		dgraph[v].frame_data = frames[i];
-		//dgraph[v].color = "red";
 		if (i<0)
 		{
 			cout << frames[i].frame_number << " = " << dgraph[v].frame_data.frame_number << endl;
@@ -151,8 +143,8 @@ void MotionGraph::setLinear(int tempFrameCount, int vertexNumber)
 	{
 		DirectedGraph::vertex_descriptor v = *(vp.first + startFrame);
 		DirectedGraph::vertex_descriptor v1 = *(vp.first + (startFrame - 1));
-		
-		if (i >0)
+		// this is only used for testing
+		if (i <-1)
 		{
 			// from the first to the next
 			add_edge(v1, v, dgraph); 
@@ -189,6 +181,7 @@ void MotionGraph::setLinear(int tempFrameCount, int vertexNumber)
 
 
 }
+// outputs the graph into graphviz format
 void MotionGraph::outPutGraphViz()
 {
 	//dp.property("node_id", get(&GraphNode::frame_data, dgraph));
