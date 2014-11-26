@@ -30,13 +30,6 @@ class MotionGraphController : public MotionController
 	void takeTransition(bool sameMotion);
 
 
-
-
-
-
-
-
-
 	/*Debugging code and functions*/
 	/////////////////////////////////////////////////////////////////////////////////////
 
