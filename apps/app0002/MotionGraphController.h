@@ -20,9 +20,7 @@ class MotionGraphController : public MotionController
 
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
 	bool isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m);
-	// only used before connections. Is to test weather inputting files is making frames connect linearly correctly.
-	bool testLinearOfMotionGraph(MotionGraph::DirectedGraph::vertex_descriptor m);
-	void readAllFrames();
+
 
 	// take transition of first transition
 	void takeTransition();
@@ -31,6 +29,20 @@ class MotionGraphController : public MotionController
 	// take transition to the same motion;
 	void takeTransition(bool sameMotion);
 
+
+
+
+
+
+
+
+
+	/*Debugging code and functions*/
+	/////////////////////////////////////////////////////////////////////////////////////
+
+	// only used before connections. Is to test weather inputting files is making frames connect linearly correctly.
+	bool testLinearOfMotionGraph(MotionGraph::DirectedGraph::vertex_descriptor m);
+	void readAllFrames();
 };
 
 

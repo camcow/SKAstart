@@ -4,7 +4,7 @@
 MotionGraphController::MotionGraphController(MotionGraph &input)
 {
 	g = input;
-	cout << "initializing" << endl;
+	cout << "initializing Motion Graph Controller \n Reading all frames to test first \n then Checking for neighbors \n" << endl;
 	// pretty much tests to see if all frames are readable;
 	readAllFrames();
 
@@ -55,8 +55,7 @@ bool MotionGraphController::testLinearOfMotionGraph(MotionGraph::DirectedGraph::
 {
 
 	// adjacency iterators or neighbors
-	std::pair<MotionGraph::neighbor_iterator, MotionGraph::neighbor_iterator> neighbors =
-		boost::adjacent_vertices(m, g.dgraph);
+	std::pair<MotionGraph::neighbor_iterator, MotionGraph::neighbor_iterator> neighbors =boost::adjacent_vertices(m, g.dgraph);
 	//iterate through all neighbors
 	int neighborCount = 0;
 	for (; neighbors.first != neighbors.second; ++neighbors.first)
@@ -69,7 +68,7 @@ bool MotionGraphController::testLinearOfMotionGraph(MotionGraph::DirectedGraph::
 	if (neighborCount == 0)
 	{
 		//for no neighbors aka end of linear file
-		std::cout << "NOOOOOO neighbors for  " << g.dgraph[m].frame_data.fileName << "frame number: " << g.dgraph[m].frame_data.frame_number << endl;
+		std::cout << "No neighbors for  " << g.dgraph[m].frame_data.fileName << "frame number: " << g.dgraph[m].frame_data.frame_number << endl;
 	}
 	// if it has 2 or more neighbors then that means it is a transition
 	if (neighborCount >= 2)

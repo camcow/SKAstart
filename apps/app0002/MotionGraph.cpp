@@ -55,25 +55,25 @@ void MotionGraph::fileReader(string filename)
 		tempFrameCount++;
 	}
 	int size = frames.size();
-	//cout << endl << "vertexNumber is " << vertexNumber << endl;
+	//	cout << endl << "vertexNumber is " << vertexNumber << endl;
 	//cout << endl << "num frames is " << size << endl;
 
 	//Now we can initialize our graph using iterators from our above vector
 	unsigned int i;
-	
-	
-		//cout << "adding " << tempFrameCount << endl;
-		for (int k = 0; k < tempFrameCount; k++)
-		{
-			add_vertex(dgraph);
-		}
+
+	//if we have already added to that graph
+	//cout << "adding " << tempFrameCount << endl;
+	for (int k = 0; k < tempFrameCount; k++)
+	{
+		add_vertex(dgraph);
+	}
 
 
 	pair<vertex_iter, vertex_iter> vp;
 	for (vp = vertices(dgraph), i = 0; vp.first != vp.second; ++vp.first, i++) {
 		DirectedGraph::vertex_descriptor v = *(vp.first);
 		dgraph[v].frame_data = frames[i];
-		if (i<0)
+		if (i < 0)
 		{
 			cout << frames[i].frame_number << " = " << dgraph[v].frame_data.frame_number << endl;
 			cout << "frame " << i << " root position = " << frames[i].root_position << endl;
@@ -82,24 +82,24 @@ void MotionGraph::fileReader(string filename)
 		}
 	}
 
-	cout << "Checking contents of the graph: " << endl;
+	//	cout << "Checking contents of the graph: " << endl;
 	for (vp = vertices(dgraph); vp.first != vp.second; ++vp.first)
 	{
 		DirectedGraph::vertex_descriptor v = *vp.first;
 		i = dgraph[v].frame_data.frame_number;
-		if (i<0)
+		if (i < 0)
 		{
 			cout << "frame " << i << " root position = " << dgraph[v].frame_data.root_position << endl;
 			cout << "frame " << i << " root joint = " << dgraph[v].frame_data.joints[0] << endl;
 			cout << "frame " << i << " joint 5 = " << dgraph[v].frame_data.joints[5] << endl;
 		}
 	}
-	
-	cout << "count " << vertexNumber << endl;
+
+	//cout << "count " << vertexNumber << endl;
 	// sets edges across all the new verticies
- 	setLinear(tempFrameCount, vertexNumber);
-	cout << endl << endl;
-	system("pause");
+	setLinear(tempFrameCount, vertexNumber);
+	//cout << endl << endl;
+	//system("pause");
 
 }
 
@@ -108,7 +108,7 @@ void MotionGraph::fileLoader()
 	//To test motion graph builder we will be loading in a vector of filenames related to baseball MoCAP
 	vector<string>baseball;
 	// vector generator
-	for (int i = 0; i<2; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		char temp[255];
 		sprintf(temp, "../../data/motion/BVH/converted/testQuaternion%d.bvh", i);
@@ -136,52 +136,53 @@ void MotionGraph::setLinear(int tempFrameCount, int vertexNumber)
 {
 	//the frame to start iterating from
 	int startFrame = vertexNumber - tempFrameCount;
-	cout << "start frame start " << startFrame << endl;
+	//cout << "start frame start " << startFrame << endl;
 	pair<vertex_iter, vertex_iter> vp;
 	int i = 0;
-	for (vp = vertices(dgraph), i = 0; vp.first+startFrame != vp.second; ++vp.first, i++) 
+	for (vp = vertices(dgraph), i = 0; vp.first + startFrame != vp.second; ++vp.first, i++)
 	{
 		DirectedGraph::vertex_descriptor v = *(vp.first + startFrame);
 		DirectedGraph::vertex_descriptor v1 = *(vp.first + (startFrame - 1));
-		// this is only used for testing
-		if (i <-1)
+
+		if (i > 0)
 		{
 			// from the first to the next
-			add_edge(v1, v, dgraph); 
+			add_edge(v1, v, dgraph);
 			//now lets add the info to the edge
 			DirectedGraph::edge_descriptor e = *out_edges(v1, dgraph).first;
 			// changing the first edge. its not a specific selector. like if there are 2 edges, this just chooses the first one.
-			if (startFrame + i > vertexNumber-2)
+			if (startFrame + i > vertexNumber - 2)
 			{
+				/*
 				cout << "vp second" << *vp.second << endl;
 				cout << "vp first" << *vp.first << endl;
 				cout << "vp first" << *vp.first+startFrame << endl;
 				cout << "frame: " << startFrame + i << endl;
 				cout << dgraph[v1].frame_data.frame_number << endl;
 				cout << dgraph[v].frame_data.frame_number << endl;
+				*/
 			}
 			//cout << dgraph[v1].frame_data.frame_number << endl;
 			//cout << dgraph[v].frame_data.frame_number << endl;
 			string name = dgraph[v1].frame_data.frame_number + "-" + dgraph[v].frame_data.frame_number;
 			dgraph[e].StartFrame = dgraph[v1].frame_data.frame_number;
 			dgraph[e].EndFrame = dgraph[v].frame_data.frame_number;
-			
-			
-				std::pair<neighbor_iterator, neighbor_iterator> neighbors =
-					boost::adjacent_vertices(v1, dgraph);
-				//iterate through all neighbors
-				for (; neighbors.first != neighbors.second; ++neighbors.first)
-				{
-					//std::cout << "neighbors for  " << dgraph[v1].frame_data.frame_number << " ";
-					//cout << dgraph[*neighbors.first].frame_data.frame_number << endl;
-				}
+
+
+			std::pair<neighbor_iterator, neighbor_iterator> neighbors =
+				boost::adjacent_vertices(v1, dgraph);
+			//iterate through all neighbors
+			for (; neighbors.first != neighbors.second; ++neighbors.first)
+			{
+				//std::cout << "neighbors for  " << dgraph[v1].frame_data.frame_number << " ";
+				//cout << dgraph[*neighbors.first].frame_data.frame_number << endl;
+			}
 		}
-		
+
 	}
 
 
 }
-// outputs the graph into graphviz format
 void MotionGraph::outPutGraphViz()
 {
 	//dp.property("node_id", get(&GraphNode::frame_data, dgraph));
@@ -193,8 +194,8 @@ void MotionGraph::outPutGraphViz()
 
 	string google = "GRAPHOUTPUT.dot";
 	std::ofstream dotfile(google.c_str());
-	
-//	dp.property("color", get("HI", dgraph));
+
+	//	dp.property("color", get("HI", dgraph));
 	//dp.property("node_id", get(boost::vertex_index, dgraph));
 	//write_graphviz(dotfile, dgraph, dp);
 	write_graphviz(dotfile, dgraph, make_label_writer(&NameVect[0]));
