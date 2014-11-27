@@ -14,4 +14,6 @@
 // textures are BMP files that are used to color some objects (such as the sky)
 #define TEXTURE_FILE_PATH "../../data/textures"
 
+#define BVH_MOTION_FILE_PATH2 "../../data/motion/BVH/Baseball_Swings"
+
 #endif // APPCONFIG_DOT_H

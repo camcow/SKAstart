@@ -47,6 +47,11 @@ public:
 	void normalSpeed()  { time_warp = 1.0f; }
 	bool isFrozen()     { return freeze; }
 	float getTimeWarp() { return time_warp; }
+
+
+
+
+
 };
 
 // global single instance of the animation controller

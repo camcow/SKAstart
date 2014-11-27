@@ -3,28 +3,46 @@
 #include "MotionGraph.h"
 #include <Core/SystemConfiguration.h>
 #include <Animation/MotionController.h>
+#include <Animation/MotionSequence.h>
 #include <Windows.h>
 #include <vector>
+#include "AppConfig.h"
+#include <boost/filesystem.hpp>
+#include "boost/filesystem/path.hpp"
+#include "DataManagement/DataManager.h"
+#include "DataManagement/DataManagementException.h"
 using namespace std;
+
 class MotionGraphController : public MotionController
 {
-	public:
-	MotionGraphController(MotionGraph &input);
+	struct state{
+		string SeqID;
+		int FrameNumber;
+	};
+private:
+	vector<MotionSequence *> MsV;
 	MotionGraph g;
+	state status;
+	
+
+public:
+	MotionGraphController(MotionGraph &input);
+
 	//~MotionGraphController();
 
-	//channels need to figure out how to set these up.
+	// need to figure out how to set these up.
 	virtual bool isValidChannel(CHANNEL_ID _channel, float _time){ return true; };
 	virtual float getValue(CHANNEL_ID _channel, float _time){ return 0; };
 
 
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
 	bool isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m);
-
+	//reads in all the motion sequences
+	void readInMotionSequences(vector<MotionSequence*> &MsV);
 
 	// take transition of first transition
 	void takeTransition();
-// take first transition of filename
+	// take first transition of filename
 	void takeTransition(string filename);
 	// take transition to the same motion;
 	void takeTransition(bool sameMotion);

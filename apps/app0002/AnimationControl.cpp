@@ -136,3 +136,4 @@ void AnimationControl::loadCharacters(list<Object*>& render_list)
 
 	ready = true;
 }
+
