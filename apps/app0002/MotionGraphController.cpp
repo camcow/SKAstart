@@ -10,8 +10,68 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	readInMotionSequences(MsV);
 
 }
+bool MotionGraphController::timeToTransition(float time)
+{// need to find out how to figure out when the time matches with the frame number. 
+	return(true);
+}
+float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
+	//if we are not transitioning we use this
+	MotionSequence test;
+	if (!status.isTransitioning)
+	{
+		 test = *MsV.at(findSeqID(status.SeqID));
+		return(test.getValue(_channel, _time));
+	}
+	//if its choosing the transition Motion Sequence
+	// add another conditional statment on whether the _time variable is at the frame number we want to transition to. 
+	else if (status.isTransitioning&&  timeToTransition(_time))
+	{
+		 test = *MsV.at(findSeqID(status.TransitionToSeqId));
+
+		status.SeqID = status.TransitionToSeqId;
+		status.FrameNumber = status.FrameNumberTransition;
+		//still more transitions to do
+		if (path.size() > 0)
+		{
+			vertexTargets temp = path.front();
+			path.pop_front();
+			status.TransitionToSeqId = temp.SeqID;
+			status.FrameNumberTransition = temp.FrameNumber;
+
+		}
+
+		// need to modify time
+		return(test.getValue(_channel, _time));
+
+	}
+	//if it is transitioning but is not at the right time
+	else{
+	
+		test = *MsV.at(findSeqID(status.SeqID));
+		return(test.getValue(_channel, _time));
+	}
+
+}
+
+MotionGraph::DirectedGraph::vertex_descriptor MotionGraphController::FindVertex(string sequenceID, int frameNumber)
+{
+	pair<MotionGraph::vertex_iter, MotionGraph::vertex_iter> vp;
+	int i;
+	for (vp = vertices(g.dgraph), i = 0; vp.first != vp.second; ++vp.first, i++) {
+		MotionGraph::DirectedGraph::vertex_descriptor v = *(vp.first);
+		if (g.dgraph[v].frame_data.fileName == sequenceID)
+		{
+			if (g.dgraph[v].frame_data.frame_number == frameNumber)
+			{
+				return(v);
+			}
+		}
+	}
+}
+
 bool MotionGraphController::isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m)
 {
+
 
 	// adjacency iterators or neighbors
 	std::pair<MotionGraph::neighbor_iterator, MotionGraph::neighbor_iterator> neighbors =
@@ -21,6 +81,7 @@ bool MotionGraphController::isTransitionPoint(MotionGraph::DirectedGraph::vertex
 	for (; neighbors.first != neighbors.second; ++neighbors.first)
 	{
 		//	std::cout << "neighbors for  " << g.dgraph[m].frame_data.fileName << g.dgraph[m].frame_data.frame_number << " is" << g.dgraph[*neighbors.first].frame_data.fileName << g.dgraph[*neighbors.first].frame_data.frame_number << endl;
+
 		neighborCount++;
 	}
 	// if it has 2 or more neighbors then that means it is a transition
@@ -80,14 +141,26 @@ void MotionGraphController::readInMotionSequences(vector<MotionSequence*> &MsV)
 
 				Skeleton* skel = read_result.first;
 				MotionSequence * ms = read_result.second;
+
 				MsV.push_back(ms);
 				MsV.size();
-				cout << "done " <<  MsV.size() << endl;
+				MsVNames.push_back(current_file);
+				cout << "done " << MsV.size() << endl;
 			}
 			catch (BasicException& e) { cout << e.msg << endl; }
 		}
 	}
-	cout << "the size of the vector is : " <<MsV.size() << endl;
+	cout << "the size of the vector is : " << MsV.size() << endl;
+
+}
+int MotionGraphController::findSeqID(string ID)
+{
+	for (int i = 0; i < MsVNames.size(); i++)
+	{
+		if (MsVNames.at(i) == ID)
+			return i;
+	}
+
 
 }
 void MotionGraphController::readAllFrames()

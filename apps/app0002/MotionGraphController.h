@@ -18,21 +18,39 @@ class MotionGraphController : public MotionController
 	struct state{
 		string SeqID;
 		int FrameNumber;
+		string TransitionToSeqId;
+		int FrameNumberTransition;
+		bool isTransitioning;
 	};
+	struct vertexTargets
+	{
+		string SeqID;
+		 int FrameNumber;
+
+	};
+
 private:
 	vector<MotionSequence *> MsV;
+	vector<string> MsVNames;
 	MotionGraph g;
 	state status;
+	list<vertexTargets> path;
 	
 
 public:
+	//curent vertex on graph for iterating purposes
+	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;
+
+
+
 	MotionGraphController(MotionGraph &input);
+
 
 	//~MotionGraphController();
 
 	// need to figure out how to set these up.
 	virtual bool isValidChannel(CHANNEL_ID _channel, float _time){ return true; };
-	virtual float getValue(CHANNEL_ID _channel, float _time){ return 0; };
+	virtual float getValue(CHANNEL_ID _channel, float _time);
 
 
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
@@ -47,7 +65,16 @@ public:
 	// take transition to the same motion;
 	void takeTransition(bool sameMotion);
 
+	//searches whole graph for a specific point. 
+	MotionGraph::DirectedGraph::vertex_descriptor MotionGraphController::FindVertex(string sequenceID, int frameNumber);
 
+	// takes commands . 
+	//void takeTranistion(vector<#unknownTransitionStructure>);
+
+	// is it time to transition?
+	bool MotionGraphController::timeToTransition(float time);
+
+	int findSeqID(string ID);
 	/*Debugging code and functions*/
 	/////////////////////////////////////////////////////////////////////////////////////
 
