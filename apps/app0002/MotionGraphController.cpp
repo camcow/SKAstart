@@ -15,8 +15,13 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	cout << test.SeqID << endl;
 	status.FrameNumber = 0;
 	status.SeqID = "swing5.bvh";
-	status.isTransitioning = false;
-
+	status.isTransitioning = true;
+	status.TransitionToSeqId = "swing5.bvh";
+	MotionSequence *MS;
+	MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
+	status.FrameNumberTransition = MS->numFrames();
+	status.FrameNumberTransitionTo = 0;
+	
 }
 
 MotionGraphController::~MotionGraphController()
@@ -39,6 +44,17 @@ bool MotionGraphController::timeToTransition(float time)
 	return(true);
 }
 
+int MotionGraphController::computeMotionSequenceFrame(MotionSequence *motion_sequence, float _time)
+{
+	float duration = motion_sequence->getDuration();
+	long cycles = long(_time / duration);
+
+	float sequence_time = _time - duration*cycles;
+	if (sequence_time > duration) sequence_time = 0.0f;
+
+	int frame = int(motion_sequence->numFrames()*sequence_time / duration);
+	return(frame);
+}
 
 long MotionGraphController::computeCurrentFrame(float _time)
 {
@@ -110,7 +126,7 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 
 		//its going to transition, so replace the SeqID and Framenumber of what we are going to transition to
 		status.SeqID = status.TransitionToSeqId;
-		status.FrameNumber = status.FrameNumberTransition;
+		status.FrameNumber = status.FrameNumberTransitionTo;
 
 		//if there are more transitions to do in the path list
 		if (path.size() > 0)
@@ -123,14 +139,14 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		}
 		//iterate the motion graph to the transitiing motion sequence.
 		
-		return(MS->getValue(_channel, _time));
+		return(MS->getValue(_channel, computeCurrentFrame(_time)));
 
 	}
 	//if it is transitioning but is not at the right time
 	else{
 		cout << computeCurrentFrame(_time) << endl;
 		MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
-		return(MS->getValue(_channel, _time));
+		return(MS->getValue(_channel ,computeCurrentFrame(_time)));
 	}
 
 }

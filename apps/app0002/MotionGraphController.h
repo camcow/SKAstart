@@ -19,8 +19,9 @@ class MotionGraphController : public MotionController
 	struct state{
 		string SeqID;
 		int FrameNumber;
-		string TransitionToSeqId;
 		int FrameNumberTransition;
+		string TransitionToSeqId;
+		int FrameNumberTransitionTo;
 		bool isTransitioning;
 	};
 	//used for transitioning sequence input
@@ -63,6 +64,8 @@ public:
 	//get current frame of currently played motion sequence
 	long computeCurrentFrame(float _time);
 	
+	int computeMotionSequenceFrame(MotionSequence *MS, float _time);
+
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
 	bool isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m);
 	//reads in all the motion sequences
