@@ -11,7 +11,7 @@
 #include "boost/filesystem/path.hpp"
 #include "DataManagement/DataManager.h"
 #include "DataManagement/DataManagementException.h"
-
+#include <Animation/AnimationException.h>
 using namespace std;
 
 class MotionGraphController : public MotionController
@@ -48,16 +48,16 @@ private:
 	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;
 
 
-	float last_transition_time;// system time when the last transition was taken
-	long last_transition_frame;//first frame in current motion that was played when the last transition was taken
-	float frame_rate = 120.0;
+	float last_transition_time=0;// system time when the last transition was taken
+	long last_transition_frame=0;//first frame in current motion that was played when the last transition was taken
+	float frame_rate = 120.0f;
 
 public:
 	MotionGraphController(MotionGraph &input);
 	~MotionGraphController();
 
 	// need to figure out how to set these up.
-	virtual bool isValidChannel(CHANNEL_ID _channel, float _time){ return true; };
+	virtual bool isValidChannel(CHANNEL_ID _channel, float _time);
 	virtual float getValue(CHANNEL_ID _channel, float _time);
 
 	//get current frame of currently played motion sequence

@@ -98,7 +98,7 @@ float MotionSequenceController::getValue(CHANNEL_ID _channel, float _time)
 	int frame = int(motion_sequence->numFrames()*sequence_time/duration);
 
 	float value = motion_sequence->getValue(_channel, frame);
-
+	
 	if (apply_start_offset)
 	{
 		// modify root based on offsets.
@@ -159,6 +159,6 @@ float MotionSequenceController::getValue(CHANNEL_ID _channel, float _time)
 			}
 		}
 	}
-
+	
 	return value;
 }

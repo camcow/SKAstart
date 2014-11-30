@@ -35,7 +35,7 @@ AnimationControl anim_ctrl;
 
 	static string character_BVH("Baseball_Swings/swing5.bvh");
 	MotionGraph a(1);
-	MotionGraphController b(a);
+	MotionGraphController *b = new MotionGraphController(a);
 	//static string character_BVH("avoid/Avoid 11.bvh");
 	//DataInput abbaJack("../../data/motion/BVH/Baseball_Swings/swing5.bvh");
 	//DataInput abbaJack();
@@ -121,8 +121,10 @@ void AnimationControl::loadCharacters(list<Object*>& render_list)
 		skel->constructRenderObject(render_list, color);
 
 		// attach motion controller to animated skeleton
-		skel->attachMotionController(controller);
 		
+		//skel->attachMotionController(controller);
+		skel->attachMotionController(b);
+
 		// create a character to link all the pieces together.
 		string d1 = string("skeleton: ") + character_BVH;
 		string d2 = string("motion: ") + character_BVH;
