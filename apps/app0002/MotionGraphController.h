@@ -11,6 +11,7 @@
 #include "boost/filesystem/path.hpp"
 #include "DataManagement/DataManager.h"
 #include "DataManagement/DataManagementException.h"
+
 using namespace std;
 
 class MotionGraphController : public MotionController
@@ -22,42 +23,50 @@ class MotionGraphController : public MotionController
 		int FrameNumberTransition;
 		bool isTransitioning;
 	};
+	//used for transitioning sequence input
+	// the list or sequence of vertex targets will be saved in a vector.
 	struct vertexTargets
 	{
 		string SeqID;
 		 int FrameNumber;
+	};
 
+	struct MotionSequenceContainer
+	{
+		MotionSequence *MS;
+		string SeqID;
 	};
 
 private:
-	vector<MotionSequence *> MsV;
-	vector<string> MsVNames;
+	vector<MotionSequenceContainer> MsVector;
+	
+
 	MotionGraph g;
 	state status;
 	list<vertexTargets> path;
-	
-
-public:
-	//curent vertex on graph for iterating purposes
+	//curent vertex on graph for iterating purposes on graph
 	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;
 
 
+	float last_transition_time;// system time when the last transition was taken
+	long last_transition_frame;//first frame in current motion that was played when the last transition was taken
+	float frame_rate = 120.0;
 
+public:
 	MotionGraphController(MotionGraph &input);
-
-
-	//~MotionGraphController();
+	~MotionGraphController();
 
 	// need to figure out how to set these up.
 	virtual bool isValidChannel(CHANNEL_ID _channel, float _time){ return true; };
 	virtual float getValue(CHANNEL_ID _channel, float _time);
 
-
+	//get current frame of currently played motion sequence
+	long computeCurrentFrame(float _time);
+	
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
 	bool isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m);
 	//reads in all the motion sequences
-	void readInMotionSequences(vector<MotionSequence*> &MsV);
-
+	void readInMotionSequences();
 	// take transition of first transition
 	void takeTransition();
 	// take first transition of filename
@@ -73,14 +82,20 @@ public:
 
 	// is it time to transition?
 	bool MotionGraphController::timeToTransition(float time);
+	
 
-	int findSeqID(string ID);
+	//returns the motionsequence container from ID
+	MotionSequenceContainer returnMotionSequenceContainerFromID(string ID);
+
 	/*Debugging code and functions*/
 	/////////////////////////////////////////////////////////////////////////////////////
 
 	// only used before connections. Is to test weather inputting files is making frames connect linearly correctly.
 	bool testLinearOfMotionGraph(MotionGraph::DirectedGraph::vertex_descriptor m);
+	//reads all the frames of the graph
 	void readAllFrames();
+	//reads all the names of the MotionSequences MsVector
+	void readAllSequenceIDs();
 };
 
 
@@ -92,14 +107,6 @@ public:
 #endif
 
 /* cameron notes
-
-
-// name spcaes are messeed up. there is anohter class called frame already
-// this points to Frame in dataInput
-/*
-Frame g1;
-//this points to the frame structure in motionGraph class
-MotionGraph::Frame g2;
 
 
 
@@ -144,3 +151,8 @@ For some reason, labeled_graph is not described in BGL documentation, but it app
 
 
 */
+
+//OLD CODE
+/*
+//finds the int place in the vector where this ID is stored in MsV
+int findSeqID(string ID);*/

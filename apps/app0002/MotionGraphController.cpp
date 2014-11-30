@@ -7,30 +7,78 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	cout << "initializing Motion Graph Controller \n Reading all frames to test first \n then Checking for neighbors \n" << endl;
 	// pretty much tests to see if all frames are readable;
 	readAllFrames();
-	readInMotionSequences(MsV);
+	readInMotionSequences();
+	//read all the ids in the vector of MsVNames
+	readAllSequenceIDs();
+	//test if I can get the motionsequenceContiner by sequence ID going to be used to replace MsV and MsVNames
+	MotionGraphController::MotionSequenceContainer test=returnMotionSequenceContainerFromID("swing6.bvh");
+	cout << test.SeqID << endl;
 
 }
+
+MotionGraphController::~MotionGraphController()
+{
+	//delete all the motion sequences;
+	for (int i = 0; i < MsVector.size(); i++)
+	{
+
+		delete MsVector.at(i).MS;
+	}
+	
+}
+
 bool MotionGraphController::timeToTransition(float time)
 {// need to find out how to figure out when the time matches with the frame number. 
+	MotionSequence *MS;
+	MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
+	int currentFrame = computeCurrentFrame(time);
+	if (currentFrame == status.FrameNumberTransition);
 	return(true);
 }
+
+
+long MotionGraphController::computeCurrentFrame(float _time)
+{
+	//determine how long we have been playing the current motion
+	float time_in_sequence = _time - last_transition_time;
+	//determine how many frames have been played in the current motion
+	long frames_in_sequence = time_in_sequence * frame_rate;
+	//offset frames played by the start frame in the current motion
+	long current_frame = frames_in_sequence + last_transition_frame;
+	return(current_frame);
+}
 float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
-	//if we are not transitioning we use this
-	MotionSequence test;
+	// if this is the first motion being played
+	if (last_transition_time == NULL)
+	{
+		last_transition_time = _time;
+		last_transition_frame = 0;
+	}
+
+	//if we are not transitioning at any time in the future
+	long currentFrame;
+	MotionSequence *MS;
 	if (!status.isTransitioning)
 	{
-		 test = *MsV.at(findSeqID(status.SeqID));
-		return(test.getValue(_channel, _time));
-	}
-	//if its choosing the transition Motion Sequence
-	// add another conditional statment on whether the _time variable is at the frame number we want to transition to. 
-	else if (status.isTransitioning&&  timeToTransition(_time))
-	{
-		 test = *MsV.at(findSeqID(status.TransitionToSeqId));
 
+		MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
+		return(MS->getValue(_channel, _time));
+	}
+	//if its choosing the transition's Motion Sequence
+	// add another conditional statment on whether the _time variable is at the frame number we want to transition to. AKA what frame number or time do we transition at for the new motion sequence
+	else if (status.isTransitioning &&  timeToTransition(_time))
+	{
+		MS = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
+
+		//set this for currentFrameCalculations
+		last_transition_time = _time;
+		last_transition_frame = status.FrameNumberTransition;
+
+		//its going to transition, so replace the SeqID and Framenumber of what we are going to transition to
 		status.SeqID = status.TransitionToSeqId;
 		status.FrameNumber = status.FrameNumberTransition;
-		//still more transitions to do
+
+		//if there are more transitions to do in the path list
 		if (path.size() > 0)
 		{
 			vertexTargets temp = path.front();
@@ -39,16 +87,16 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 			status.FrameNumberTransition = temp.FrameNumber;
 
 		}
-
-		// need to modify time
-		return(test.getValue(_channel, _time));
+		//iterate the motion graph to the transitiing motion sequence.
+		
+		return(MS->getValue(_channel, _time));
 
 	}
 	//if it is transitioning but is not at the right time
 	else{
 	
-		test = *MsV.at(findSeqID(status.SeqID));
-		return(test.getValue(_channel, _time));
+		MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
+		return(MS->getValue(_channel, _time));
 	}
 
 }
@@ -93,7 +141,8 @@ bool MotionGraphController::isTransitionPoint(MotionGraph::DirectedGraph::vertex
 	//cout << "not a transition point" << endl;
 	return(false);
 }
-void MotionGraphController::readInMotionSequences(vector<MotionSequence*> &MsV)
+
+void MotionGraphController::readInMotionSequences()
 {
 
 	cout << "reading motion Sequences" << endl;
@@ -141,28 +190,53 @@ void MotionGraphController::readInMotionSequences(vector<MotionSequence*> &MsV)
 
 				Skeleton* skel = read_result.first;
 				MotionSequence * ms = read_result.second;
-
+				//old code
+				/*
 				MsV.push_back(ms);
 				MsV.size();
 				MsVNames.push_back(current_file);
-				cout << "done " << MsV.size() << endl;
+
+					*/
+
+				//test for new structure
+				MotionSequenceContainer test;
+				test.MS = ms;
+				test.SeqID = current_file;
+				MsVector.push_back(test);
+
+				
+				cout << "done " << MsVector.size() << endl;
+
 			}
 			catch (BasicException& e) { cout << e.msg << endl; }
 		}
 	}
-	cout << "the size of the vector is : " << MsV.size() << endl;
-
+	cout << "the size of the vector is : " << MsVector.size() << endl;
+	
 }
-int MotionGraphController::findSeqID(string ID)
+
+void MotionGraphController::readAllSequenceIDs()
 {
-	for (int i = 0; i < MsVNames.size(); i++)
+	for (int i = 0; i < MsVector.size(); i++)
 	{
-		if (MsVNames.at(i) == ID)
-			return i;
+
+		cout << "names " << i << " :" << MsVector.at(i).SeqID << endl;
+
 	}
 
 
 }
+
+MotionGraphController::MotionSequenceContainer MotionGraphController::returnMotionSequenceContainerFromID(string ID)
+{
+	for (int i = 0; i < MsVector.size(); i++)
+	{
+		if (MsVector.at(i).SeqID == ID)
+			return MsVector.at(i);
+	}
+
+}
+
 void MotionGraphController::readAllFrames()
 {
 	pair<MotionGraph::vertex_iter, MotionGraph::vertex_iter> vp;
@@ -210,3 +284,17 @@ bool MotionGraphController::testLinearOfMotionGraph(MotionGraph::DirectedGraph::
 	//cout << "not a transition point" << endl;
 	return(false);
 }
+
+///OLD CODE
+//old code 
+/*
+int MotionGraphController::findSeqID(string ID)
+{
+	for (int i = 0; i < MsVNames.size(); i++)
+	{
+		if (MsVNames.at(i) == ID)
+			return i;
+	}
+
+
+}*/
