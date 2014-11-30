@@ -76,6 +76,7 @@ bool MotionGraphController::isValidChannel(CHANNEL_ID _channel, float _time)
 	}
 	return motion_sequence->isValidChannel(_channel);
 }
+// all broken
 float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 
 	

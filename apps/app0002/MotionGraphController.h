@@ -16,12 +16,13 @@ using namespace std;
 
 class MotionGraphController : public MotionController
 {
+	// need to fix this and how to use it
 	struct state{
 		string SeqID;
-		int FrameNumber;
-		int FrameNumberTransition;
-		string TransitionToSeqId;
-		int FrameNumberTransitionTo;
+		int FrameNumber;// current frame number
+		int FrameNumberTransition; // what frame number is the transition
+		string TransitionToSeqId;// seqId to transition to
+		int FrameNumberTransitionTo;// what frame to start on the new motion sequence
 		bool isTransitioning;
 	};
 	//used for transitioning sequence input
@@ -30,6 +31,9 @@ class MotionGraphController : public MotionController
 	{
 		string SeqID;
 		 int FrameNumber;
+		 // what you transition to
+		 string SeqID2;
+		 int FrameNumber2;
 	};
 
 	struct MotionSequenceContainer
