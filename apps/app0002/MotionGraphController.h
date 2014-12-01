@@ -21,6 +21,7 @@ class MotionGraphController : public MotionController
 		string SeqID;
 		int FrameNumber;// current frame number
 		int FrameNumberTransition; // what frame number is the transition
+		//int FramelengthSeq1;
 		string TransitionToSeqId;// seqId to transition to
 		int FrameNumberTransitionTo;// what frame to start on the new motion sequence
 		bool isTransitioning;
@@ -28,7 +29,8 @@ class MotionGraphController : public MotionController
 	//used for transitioning sequence input
 	// the list or sequence of vertex targets will be saved in a vector.
 	struct vertexTargets
-	{
+	{ 
+		///motion A frame 2 ----to---- motion B frame 3;
 		string SeqID;
 		 int FrameNumber;
 		 // what you transition to
@@ -44,11 +46,10 @@ class MotionGraphController : public MotionController
 
 private:
 	vector<MotionSequenceContainer> MsVector;
-	
-
 	MotionGraph g;
 	state status;
 	list<vertexTargets> path;
+	
 	//curent vertex on graph for iterating purposes on graph
 	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;
 
@@ -57,6 +58,7 @@ private:
 	long last_transition_frame=0;//first frame in current motion that was played when the last transition was taken
 	float frame_rate = 120.0f;
 
+	float testTime=0;
 public:
 	MotionGraphController(MotionGraph &input);
 	~MotionGraphController();
@@ -69,6 +71,8 @@ public:
 	long computeCurrentFrame(float _time);
 	
 	int computeMotionSequenceFrame(MotionSequence *MS, float _time);
+
+	void printStatus();
 
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
 	bool isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m);
@@ -88,8 +92,11 @@ public:
 	//void takeTranistion(vector<#unknownTransitionStructure>);
 
 	// is it time to transition?
-	bool MotionGraphController::timeToTransition(float time);
-	
+	bool timeToTransition(float time);
+
+	//updates the information of the status variable to the next target;
+	//does not update status.FrameNumber or the current frame being played
+	void updateStatus();
 
 	//returns the motionsequence container from ID
 	MotionSequenceContainer returnMotionSequenceContainerFromID(string ID);

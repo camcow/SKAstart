@@ -21,7 +21,40 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
 	status.FrameNumberTransition = MS->numFrames();
 	status.FrameNumberTransitionTo = 0;
-	
+	//temp vertex target list
+
+	MotionGraphController::vertexTargets temp;
+	temp.SeqID = "swing5.bvh";
+	temp.SeqID2 = "swing6.bvh";
+	temp.FrameNumber = MS->numFrames();
+	temp.FrameNumber2 = 0;
+	path.push_back(temp);
+	//second transition
+	temp.SeqID = "swing6.bvh";
+	temp.SeqID2 = "swing5.bvh";
+	temp.FrameNumber = MS->numFrames();
+	temp.FrameNumber2 = 0;
+	path.push_back(temp);
+	printStatus();
+	cout << "update status" << endl;
+	updateStatus();
+
+	cout << "TIME QUESTIONS" << endl;
+	cout << "max frames " << MS->numFrames() << endl;
+	cout << "max frames " << MS->numFrames()/120 << endl;
+	cout <<"time1 0.011: "<< computeCurrentFrame(0.011) << endl;
+	cout << "time2 0.011: " << computeMotionSequenceFrame(MS,0.011) << endl;
+	cout << "time3 3.011: " << computeCurrentFrame( 3.637000) << endl;
+	cout << "time3 3.011: " << computeMotionSequenceFrame(MS, 3.637000) << endl;
+	last_transition_time = 3.54799962;
+	last_transition_frame = 0;
+	cout << "last_transition_time : " << last_transition_time<<endl;// system time when the last transition was taken
+	cout << "last_transition_frame : " << last_transition_frame << endl;
+	cout << "frame test " << computeCurrentFrame(3.54799962) << endl;
+	cout << "frame test real: " << computeMotionSequenceFrame(MS, 3.54799962) << endl;
+	last_transition_time = 0;
+	last_transition_frame = 0;
+	cout << endl;
 }
 
 MotionGraphController::~MotionGraphController()
@@ -40,8 +73,10 @@ bool MotionGraphController::timeToTransition(float time)
 	MotionSequence *MS;
 	MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
 	int currentFrame = computeCurrentFrame(time);
-	if (currentFrame == status.FrameNumberTransition);
-	return(true);
+	if (currentFrame >= status.FrameNumberTransition)
+		return(true);
+	else
+		return(false);
 }
 
 int MotionGraphController::computeMotionSequenceFrame(MotionSequence *motion_sequence, float _time)
@@ -64,6 +99,9 @@ long MotionGraphController::computeCurrentFrame(float _time)
 	long frames_in_sequence = time_in_sequence * frame_rate;
 	//offset frames played by the start frame in the current motion
 	long current_frame = frames_in_sequence + last_transition_frame;
+	//cout << "last_transition_time " << last_transition_time << endl;
+	//cout << "last_transition_frame " << last_transition_frame << endl;
+	//cout << "COMPUTE CURRENT FRAME" << current_frame << endl;
 	return(current_frame);
 }
 bool MotionGraphController::isValidChannel(CHANNEL_ID _channel, float _time)
@@ -76,12 +114,48 @@ bool MotionGraphController::isValidChannel(CHANNEL_ID _channel, float _time)
 	}
 	return motion_sequence->isValidChannel(_channel);
 }
+void MotionGraphController::updateStatus()
+{
+	//transitions to follow
+	if (path.size() > 0)
+	{
+		status.isTransitioning = true;
+		// take the first one off the list;
+		vertexTargets temp = path.front();
+		path.pop_front();
+		//first seq
+		status.SeqID = temp.SeqID;
+		//first seq framenumber where we transition 
+		status.FrameNumberTransition = temp.FrameNumber;
+		//what we are transitioning to
+		status.TransitionToSeqId = temp.SeqID2;
+	//what frame we are transitioning to on the second seq;
+		status.FrameNumberTransitionTo = temp.FrameNumber2;
+	}
+	// none left so repeat
+	else
+	{
+		status.isTransitioning = true;
+		// the last transition is now the new seqId aka what is playing
+		status.SeqID = status.TransitionToSeqId;
+		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
+		//where to transition on the last frame
+		status.FrameNumberTransition = motion_sequence->numFrames();
+		// set transition to to fame 0 of the same motion sequence
+		status.FrameNumberTransitionTo = 0;
+	}
+	//iterate the motio
+
+//	printStatus();
+
+
+
+}
+
 // all broken
 float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
-
 	
 	//if we are not transitioning at any time in the future
-	long currentFrame;
 	MotionSequence *MS;
 	if (!status.isTransitioning)
 	{
@@ -103,14 +177,21 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 			float	sequence_time = _time - duration*cycles;
 		if (sequence_time > duration) sequence_time = 0.0f;
 		int frame = int(motion_sequence->numFrames()*sequence_time / duration);
+		int frame2 =computeMotionSequenceFrame(motion_sequence,_time);
+		
 
 		// after repeating it doesn't work with my time.
-		cout << "TIME: " << _time << endl;
-		cout<<"my test " << computeCurrentFrame(_time) << endl;
-		cout << "working " << frame << endl;
+		//cout << "TIME: " << _time << endl;
+		//cout<<"my test " << computeCurrentFrame(_time) << endl;
+		//cout << "working " << frame << endl;
+		//cout << "working2 " << frame2 << endl;
 
 		float value = motion_sequence->getValue(_channel, frame);
 		//float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
+
+		//update status
+		status.FrameNumber = frame2;
+
 		return(value);
 	
 	}
@@ -118,36 +199,87 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 	// add another conditional statment on whether the _time variable is at the frame number we want to transition to. AKA what frame number or time do we transition at for the new motion sequence
 	else if (status.isTransitioning &&  timeToTransition(_time))
 	{
-		cout << computeCurrentFrame(_time) << endl;
-		MS = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
+
+		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
+		if (motion_sequence == NULL)
+			throw AnimationException("MotionSequenceController has no attached MotionSequence");
+
+		if (!isValidChannel(_channel, _time))
+		{
+			string s = string("MotionSequenceController received request for invalid channel ")
+				+ " bone: " + toString(_channel.bone_id) + " dof: " + toString(_channel.channel_type);
+			throw AnimationException(s.c_str());
+		}
+
 
 		//set this for currentFrameCalculations
 		last_transition_time = _time;
-		last_transition_frame = status.FrameNumberTransition;
-
-		//its going to transition, so replace the SeqID and Framenumber of what we are going to transition to
-		status.SeqID = status.TransitionToSeqId;
+		last_transition_frame = status.FrameNumberTransitionTo;
+		// set the frame number to the frame we transition to.
 		status.FrameNumber = status.FrameNumberTransitionTo;
+		//update the status
+		updateStatus();
 
-		//if there are more transitions to do in the path list
-		if (path.size() > 0)
-		{
-			vertexTargets temp = path.front();
-			path.pop_front();
-			status.TransitionToSeqId = temp.SeqID;
-			status.FrameNumberTransition = temp.FrameNumber;
+	
+		// after repeating it doesn't work with my time.
 
-		}
-		//iterate the motion graph to the transitiing motion sequence.
+		float duration = motion_sequence->getDuration();
+		long cycles = long(_time / duration);
+
+		float	sequence_time = _time - duration*cycles;
+		if (sequence_time > duration) sequence_time = 0.0f;
+		int frame = int(motion_sequence->numFrames()*sequence_time / duration);
+		int frame3 = computeCurrentFrame(_time);
+		//cout << "TIME: " << _time << endl;
+		//cout << "last_transition_time " << last_transition_time << endl; 
+		//cout << "last_transition_frame" << endl; 
+		//cout << "my test " << computeCurrentFrame(_time) << endl;
+		//cout << "working " << frame << endl;
 		
-		return(MS->getValue(_channel, computeCurrentFrame(_time)));
+		return(motion_sequence->getValue(_channel, computeCurrentFrame(_time)));
 
 	}
 	//if it is transitioning but is not at the right time
 	else{
-		cout << computeCurrentFrame(_time) << endl;
-		MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
-		return(MS->getValue(_channel ,computeCurrentFrame(_time)));
+		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
+		if (motion_sequence == NULL)
+			throw AnimationException("MotionSequenceController has no attached MotionSequence");
+
+		if (!isValidChannel(_channel, _time))
+		{
+			string s = string("MotionSequenceController received request for invalid channel ")
+				+ " bone: " + toString(_channel.bone_id) + " dof: " + toString(_channel.channel_type);
+			throw AnimationException(s.c_str());
+		}
+
+		float duration = motion_sequence->getDuration();
+		long cycles = long(_time / duration);
+
+		float	sequence_time = _time - duration*cycles;
+		if (sequence_time > duration) sequence_time = 0.0f;
+		int frame = int(motion_sequence->numFrames()*sequence_time / duration);
+		int frame2 = computeMotionSequenceFrame(motion_sequence, _time);
+		int frame3 = computeCurrentFrame(_time);
+
+		// after repeating it doesn't work with my time.
+		//cout << "TIME: " << _time << endl;
+		//cout << "my test " << computeCurrentFrame(_time) << endl;
+		//cout << "working " << frame << endl;
+		//cout << "working2 " << frame2 << endl;
+		
+		//float value = motion_sequence->getValue(_channel, frame);
+		float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
+		//cout << value << endl;
+		//update status
+		status.FrameNumber = frame3;
+		if (testTime != _time)
+	{
+		//cout << "time change" << endl;
+		testTime = _time;
+	}
+	
+
+		return(value);
 	}
 
 }
@@ -305,6 +437,19 @@ void MotionGraphController::readAllFrames()
 		//	Sleep(2000);
 
 	}
+}
+
+void MotionGraphController::printStatus()
+{
+
+	cout << "STATUS VARIABLE" << endl;
+	cout << "SeqID: " << status.SeqID << endl;
+	cout << "FrameNumber: " << status.FrameNumber << endl;
+	cout << "FrameNumberTransition: " << status.FrameNumberTransition << endl;
+	//cout << "FramelengthSeq1: " << status.FramelengthSeq1 << endl;
+	cout << "TransitionToSeqId: " << status.TransitionToSeqId << endl;
+	cout << "FrameNumberTransitionTo: " << status.FrameNumberTransitionTo << endl;
+	cout << "isTransitioning: " << status.isTransitioning << endl;
 }
 
 bool MotionGraphController::testLinearOfMotionGraph(MotionGraph::DirectedGraph::vertex_descriptor m)
