@@ -10,9 +10,8 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	readInMotionSequences();
 	//read all the ids in the vector of MsVNames
 	readAllSequenceIDs();
-	//test if I can get the motionsequenceContiner by sequence ID going to be used to replace MsV and MsVNames
-	MotionGraphController::MotionSequenceContainer test=returnMotionSequenceContainerFromID("swing6.bvh");
-	cout << test.SeqID << endl;
+	/* test code*/
+	
 	status.FrameNumber = 0;
 	status.SeqID = "swing5.bvh";
 	status.isTransitioning = true;
@@ -38,23 +37,8 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	printStatus();
 	cout << "update status" << endl;
 	updateStatus();
-
-	cout << "TIME QUESTIONS" << endl;
-	cout << "max frames " << MS->numFrames() << endl;
-	cout << "max frames " << MS->numFrames()/120 << endl;
-	cout <<"time1 0.011: "<< computeCurrentFrame(0.011) << endl;
-	cout << "time2 0.011: " << computeMotionSequenceFrame(MS,0.011) << endl;
-	cout << "time3 3.011: " << computeCurrentFrame( 3.637000) << endl;
-	cout << "time3 3.011: " << computeMotionSequenceFrame(MS, 3.637000) << endl;
-	last_transition_time = 3.54799962;
-	last_transition_frame = 0;
-	cout << "last_transition_time : " << last_transition_time<<endl;// system time when the last transition was taken
-	cout << "last_transition_frame : " << last_transition_frame << endl;
-	cout << "frame test " << computeCurrentFrame(3.54799962) << endl;
-	cout << "frame test real: " << computeMotionSequenceFrame(MS, 3.54799962) << endl;
-	last_transition_time = 0;
-	last_transition_frame = 0;
-	cout << endl;
+	
+	
 }
 
 MotionGraphController::~MotionGraphController()
@@ -157,47 +141,10 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 	
 	//if we are not transitioning at any time in the future
 	MotionSequence *MS;
-	if (!status.isTransitioning)
-	{
 
-		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
-		if (motion_sequence == NULL)
-			throw AnimationException("MotionSequenceController has no attached MotionSequence");
-
-		if (!isValidChannel(_channel, _time))
-		{
-			string s = string("MotionSequenceController received request for invalid channel ")
-				+ " bone: " + toString(_channel.bone_id) + " dof: " + toString(_channel.channel_type);
-			throw AnimationException(s.c_str());
-		}
-
-		float duration = motion_sequence->getDuration();
-		long cycles = long(_time / duration);
-
-			float	sequence_time = _time - duration*cycles;
-		if (sequence_time > duration) sequence_time = 0.0f;
-		int frame = int(motion_sequence->numFrames()*sequence_time / duration);
-		int frame2 =computeMotionSequenceFrame(motion_sequence,_time);
-		
-
-		// after repeating it doesn't work with my time.
-		//cout << "TIME: " << _time << endl;
-		//cout<<"my test " << computeCurrentFrame(_time) << endl;
-		//cout << "working " << frame << endl;
-		//cout << "working2 " << frame2 << endl;
-
-		float value = motion_sequence->getValue(_channel, frame);
-		//float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
-
-		//update status
-		status.FrameNumber = frame2;
-
-		return(value);
-	
-	}
 	//if its choosing the transition's Motion Sequence
 	// add another conditional statment on whether the _time variable is at the frame number we want to transition to. AKA what frame number or time do we transition at for the new motion sequence
-	else if (status.isTransitioning &&  timeToTransition(_time))
+	 if (status.isTransitioning &&  timeToTransition(_time))
 	{
 
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
@@ -230,11 +177,7 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		if (sequence_time > duration) sequence_time = 0.0f;
 		int frame = int(motion_sequence->numFrames()*sequence_time / duration);
 		int frame3 = computeCurrentFrame(_time);
-		//cout << "TIME: " << _time << endl;
-		//cout << "last_transition_time " << last_transition_time << endl; 
-		//cout << "last_transition_frame" << endl; 
-		//cout << "my test " << computeCurrentFrame(_time) << endl;
-		//cout << "working " << frame << endl;
+	
 		
 		return(motion_sequence->getValue(_channel, computeCurrentFrame(_time)));
 
@@ -261,15 +204,9 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		int frame2 = computeMotionSequenceFrame(motion_sequence, _time);
 		int frame3 = computeCurrentFrame(_time);
 
-		// after repeating it doesn't work with my time.
-		//cout << "TIME: " << _time << endl;
-		//cout << "my test " << computeCurrentFrame(_time) << endl;
-		//cout << "working " << frame << endl;
-		//cout << "working2 " << frame2 << endl;
 		
-		//float value = motion_sequence->getValue(_channel, frame);
 		float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
-		//cout << value << endl;
+	
 		//update status
 		status.FrameNumber = frame3;
 		if (testTime != _time)
