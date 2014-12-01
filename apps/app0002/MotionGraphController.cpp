@@ -1,7 +1,7 @@
 #include "MotionGraphController.h"
 
 
-MotionGraphController::MotionGraphController(MotionGraph &input)
+MotionGraphController::MotionGraphController(MotionGraph &input) 
 {
 	g = input;
 	cout << "initializing Motion Graph Controller \n Reading all frames to test first \n then Checking for neighbors \n" << endl;
@@ -17,6 +17,9 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	status.isTransitioning = true;
 	status.TransitionToSeqId = "swing5.bvh";
 	MotionSequence *MS;
+	MotionSequence *MS2; 
+	MotionSequence *MS3;
+	MotionSequence *MS4;
 	MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
 	status.FrameNumberTransition = MS->numFrames();
 	status.FrameNumberTransitionTo = 0;
@@ -29,16 +32,32 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	temp.FrameNumber2 = 0;
 	path.push_back(temp);
 	//second transition
+	MS2 = returnMotionSequenceContainerFromID("swing6.bvh").MS;
 	temp.SeqID = "swing6.bvh";
 	temp.SeqID2 = "swing5.bvh";
-	temp.FrameNumber = MS->numFrames();
+	temp.FrameNumber = MS2->numFrames();
 	temp.FrameNumber2 = 0;
 	path.push_back(temp);
+
+	MS3 = returnMotionSequenceContainerFromID("swing5.bvh").MS;
+	temp.SeqID = "swing5.bvh";
+	temp.SeqID2 = "swing7.bvh";
+	temp.FrameNumber = MS3->numFrames();
+	temp.FrameNumber2 = 0;
+	path.push_back(temp);
+
+	MS4 = returnMotionSequenceContainerFromID("swing7.bvh").MS;
+
+	temp.SeqID = "swing7.bvh";
+	temp.SeqID2 = "swing5.bvh";
+	temp.FrameNumber = MS4->numFrames();
+	temp.FrameNumber2 = 0;
+	path.push_back(temp);
+
 	printStatus();
 	cout << "update status" << endl;
 	updateStatus();
-	
-	
+	pathBackup = path;
 }
 
 MotionGraphController::~MotionGraphController()
@@ -119,6 +138,9 @@ void MotionGraphController::updateStatus()
 	// none left so repeat
 	else
 	{
+		path = pathBackup;
+		updateStatus();
+		return;
 		status.isTransitioning = true;
 		// the last transition is now the new seqId aka what is playing
 		status.SeqID = status.TransitionToSeqId;
@@ -130,7 +152,7 @@ void MotionGraphController::updateStatus()
 	}
 	//iterate the motio
 
-//	printStatus();
+	//printStatus();
 
 
 
@@ -148,6 +170,11 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 	{
 
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
+
+		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TX), character_size_scale);
+		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
+		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TZ), character_size_scale);
+
 		if (motion_sequence == NULL)
 			throw AnimationException("MotionSequenceController has no attached MotionSequence");
 
@@ -164,8 +191,7 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		last_transition_frame = status.FrameNumberTransitionTo;
 		// set the frame number to the frame we transition to.
 		status.FrameNumber = status.FrameNumberTransitionTo;
-		//update the status
-		updateStatus();
+	
 
 	
 		// after repeating it doesn't work with my time.
@@ -177,14 +203,25 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		if (sequence_time > duration) sequence_time = 0.0f;
 		int frame = int(motion_sequence->numFrames()*sequence_time / duration);
 		int frame3 = computeCurrentFrame(_time);
-	
+
+
+		float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
+
+		//update the status
+		updateStatus();
 		
-		return(motion_sequence->getValue(_channel, computeCurrentFrame(_time)));
+		
+		return(value);
 
 	}
 	//if it is transitioning but is not at the right time
 	else{
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
+
+		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TX), character_size_scale);
+		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
+		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TZ), character_size_scale); 
+
 		if (motion_sequence == NULL)
 			throw AnimationException("MotionSequenceController has no attached MotionSequence");
 
@@ -204,17 +241,10 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		int frame2 = computeMotionSequenceFrame(motion_sequence, _time);
 		int frame3 = computeCurrentFrame(_time);
 
-		
 		float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
 	
 		//update status
 		status.FrameNumber = frame3;
-		if (testTime != _time)
-	{
-		//cout << "time change" << endl;
-		testTime = _time;
-	}
-	
 
 		return(value);
 	}
@@ -417,6 +447,10 @@ bool MotionGraphController::testLinearOfMotionGraph(MotionGraph::DirectedGraph::
 	//cout << "not a transition point" << endl;
 	return(false);
 }
+
+
+
+
 
 ///OLD CODE
 //old code 

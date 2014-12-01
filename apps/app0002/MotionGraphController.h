@@ -49,7 +49,7 @@ private:
 	MotionGraph g;
 	state status;
 	list<vertexTargets> path;
-	
+	list<vertexTargets> pathBackup;
 	//curent vertex on graph for iterating purposes on graph
 	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;
 
@@ -58,7 +58,10 @@ private:
 	long last_transition_frame=0;//first frame in current motion that was played when the last transition was taken
 	float frame_rate = 120.0f;
 
-	float testTime=0;
+	float character_size_scale = 0.3f;
+
+	
+	
 public:
 	MotionGraphController(MotionGraph &input);
 	~MotionGraphController();
@@ -66,6 +69,8 @@ public:
 	// need to figure out how to set these up.
 	virtual bool isValidChannel(CHANNEL_ID _channel, float _time);
 	virtual float getValue(CHANNEL_ID _channel, float _time);
+
+
 
 	//get current frame of currently played motion sequence
 	long computeCurrentFrame(float _time);

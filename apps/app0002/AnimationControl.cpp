@@ -121,7 +121,9 @@ void AnimationControl::loadCharacters(list<Object*>& render_list)
 		skel->constructRenderObject(render_list, color);
 
 		// attach motion controller to animated skeleton
+
 		
+
 		//skel->attachMotionController(controller);
 		skel->attachMotionController(b);
 
