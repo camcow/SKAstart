@@ -56,8 +56,14 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 
 	printStatus();
 	cout << "update status" << endl;
-	updateStatus();
+	iterateStatus();
 	pathBackup = path;
+
+	//set the current_vertex 
+	// only use once the names of the files MS match up with the names of the motion graph verticies 
+
+	//CurrentVertex = FindVertex(status.SeqID, status.FrameNumber); 
+	//cout << "just for testing" << endl;
 }
 
 MotionGraphController::~MotionGraphController()
@@ -107,6 +113,7 @@ long MotionGraphController::computeCurrentFrame(float _time)
 	//cout << "COMPUTE CURRENT FRAME" << current_frame << endl;
 	return(current_frame);
 }
+
 bool MotionGraphController::isValidChannel(CHANNEL_ID _channel, float _time)
 {
 	MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
@@ -117,7 +124,8 @@ bool MotionGraphController::isValidChannel(CHANNEL_ID _channel, float _time)
 	}
 	return motion_sequence->isValidChannel(_channel);
 }
-void MotionGraphController::updateStatus()
+
+void MotionGraphController::iterateStatus()
 {
 	//transitions to follow
 	if (path.size() > 0)
@@ -139,7 +147,7 @@ void MotionGraphController::updateStatus()
 	else
 	{
 		path = pathBackup;
-		updateStatus();
+		iterateStatus();
 		return;
 		//status.isTransitioning = true;
 		// the last transition is now the new seqId aka what is playing
@@ -158,12 +166,11 @@ void MotionGraphController::updateStatus()
 
 }
 
-// all broken
 float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 	
 	//if we are not transitioning at any time in the future
 	MotionSequence *MS;
-
+	
 	//if its choosing the transition's Motion Sequence
 	// add another conditional statment on whether the _time variable is at the frame number we want to transition to. AKA what frame number or time do we transition at for the new motion sequence
 	 if (status.isTransitioning &&  timeToTransition(_time))
@@ -172,7 +179,7 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
 
 		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TX), character_size_scale);
-		//motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
+		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
 		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TZ), character_size_scale);
 
 		if (motion_sequence == NULL)
@@ -207,8 +214,12 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 
 		float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
 
+		//transition the graph using status information
+		// only use when we have matching names of Motion sequences are the same as the filenames of the frames on the graph
+		//transitionGraph();
+
 		//update the status
-		updateStatus();
+		iterateStatus();
 		
 		
 		return(value);
@@ -219,7 +230,7 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
 
 		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TX), character_size_scale);
-		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
+	motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
 		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TZ), character_size_scale); 
 
 		if (motion_sequence == NULL)
@@ -245,6 +256,10 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 	
 		//update status
 		status.FrameNumber = frame3;
+		// only use when we have matching names of Motion sequences are the same as the filenames of the frames on the graph
+		//iterate graph
+		//iterateMotionGraph();
+
 
 		return(value);
 	}
@@ -255,7 +270,8 @@ MotionGraph::DirectedGraph::vertex_descriptor MotionGraphController::FindVertex(
 {
 	pair<MotionGraph::vertex_iter, MotionGraph::vertex_iter> vp;
 	int i;
-	for (vp = vertices(g.dgraph), i = 0; vp.first != vp.second; ++vp.first, i++) {
+	for (vp = vertices(g.dgraph), i = 0; vp.first != vp.second; ++vp.first, i++)
+	{
 		MotionGraph::DirectedGraph::vertex_descriptor v = *(vp.first);
 		if (g.dgraph[v].frame_data.fileName == sequenceID)
 		{
@@ -265,6 +281,48 @@ MotionGraph::DirectedGraph::vertex_descriptor MotionGraphController::FindVertex(
 			}
 		}
 	}
+	cout << "could not find vertex" << endl;
+	return(NULL);
+}
+
+void MotionGraphController::iterateMotionGraph()
+{
+
+	std::pair<MotionGraph::neighbor_iterator, MotionGraph::neighbor_iterator> neighbors =
+		boost::adjacent_vertices(CurrentVertex, g.dgraph);
+	for (; neighbors.first != neighbors.second; ++neighbors.first)
+	{
+		//if the neighbor has the same name as the vertex we are currently on and has the same frame number as the vertex we are on;
+		if (g.dgraph[*neighbors.first].frame_data.fileName == status.SeqID&&g.dgraph[*neighbors.first].frame_data.frame_number==status.FrameNumber)
+		{
+			// set it to the neighbor with the correct filename
+			CurrentVertex = *neighbors.first;
+			return;
+		} 
+
+		
+	}
+
+}
+void MotionGraphController::transitionGraph()
+{
+	//uses status info
+
+	std::pair<MotionGraph::neighbor_iterator, MotionGraph::neighbor_iterator> neighbors =
+		boost::adjacent_vertices(CurrentVertex, g.dgraph);
+	for (; neighbors.first != neighbors.second; ++neighbors.first)
+	{
+		//if the neighbor has the same name as the vertex we are currently transitioning to and has the same frame number as the vertex we are transitioning to;
+		if (g.dgraph[*neighbors.first].frame_data.fileName == status.TransitionToSeqId&&g.dgraph[*neighbors.first].frame_data.frame_number == status.FrameNumberTransitionTo)
+		{
+			// set it to the neighbor with the correct filename
+			CurrentVertex = *neighbors.first;
+			return;
+		}
+
+
+	}
+
 }
 
 bool MotionGraphController::isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m)
@@ -349,6 +407,14 @@ void MotionGraphController::readInMotionSequences()
 					*/
 
 				//test for new structure
+
+				std::string x = current_file;
+				char *y = new char[x.length() + 1]; // or
+				// char y[100];
+				
+				std::strcpy(y, x.c_str());
+				ms->setId(y);
+				delete[] y;
 				MotionSequenceContainer test;
 				test.MS = ms;
 				test.SeqID = current_file;

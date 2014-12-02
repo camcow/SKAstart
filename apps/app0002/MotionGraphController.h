@@ -45,10 +45,13 @@ class MotionGraphController : public MotionController
 	};
 
 private:
+	// contains all the motion sequences
 	vector<MotionSequenceContainer> MsVector;
+	MotionSequenceContainer cachedMSC;
 	MotionGraph g;
 	state status;
 	list<vertexTargets> path;
+	// used to loop through the path once again;
 	list<vertexTargets> pathBackup;
 	//curent vertex on graph for iterating purposes on graph
 	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;
@@ -66,32 +69,25 @@ public:
 	MotionGraphController(MotionGraph &input);
 	~MotionGraphController();
 
-	// need to figure out how to set these up.
 	virtual bool isValidChannel(CHANNEL_ID _channel, float _time);
 	virtual float getValue(CHANNEL_ID _channel, float _time);
 
-
-
 	//get current frame of currently played motion sequence
 	long computeCurrentFrame(float _time);
-	
-	int computeMotionSequenceFrame(MotionSequence *MS, float _time);
-
-	void printStatus();
 
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
 	bool isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m);
 	//reads in all the motion sequences
 	void readInMotionSequences();
-	// take transition of first transition
-	void takeTransition();
-	// take first transition of filename
-	void takeTransition(string filename);
-	// take transition to the same motion;
-	void takeTransition(bool sameMotion);
-
+	
 	//searches whole graph for a specific point. 
 	MotionGraph::DirectedGraph::vertex_descriptor MotionGraphController::FindVertex(string sequenceID, int frameNumber);
+
+	//iterate graph to one vertex ahead or by one frame
+	void iterateMotionGraph();
+
+	// used after transition to set the graph to the correct vertex
+	void transitionGraph();
 
 	// takes commands . 
 	//void takeTranistion(vector<#unknownTransitionStructure>);
@@ -101,7 +97,7 @@ public:
 
 	//updates the information of the status variable to the next target;
 	//does not update status.FrameNumber or the current frame being played
-	void updateStatus();
+	void iterateStatus();
 
 	//returns the motionsequence container from ID
 	MotionSequenceContainer returnMotionSequenceContainerFromID(string ID);
@@ -115,6 +111,13 @@ public:
 	void readAllFrames();
 	//reads all the names of the MotionSequences MsVector
 	void readAllSequenceIDs();
+
+	// this is for testing with motion sequences
+	// only to be used if looping the same motion sequence
+	int computeMotionSequenceFrame(MotionSequence *MS, float _time);
+
+	// print the status variable
+	void printStatus();
 };
 
 
