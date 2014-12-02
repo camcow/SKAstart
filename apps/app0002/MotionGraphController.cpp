@@ -141,14 +141,14 @@ void MotionGraphController::updateStatus()
 		path = pathBackup;
 		updateStatus();
 		return;
-		status.isTransitioning = true;
+		//status.isTransitioning = true;
 		// the last transition is now the new seqId aka what is playing
 		status.SeqID = status.TransitionToSeqId;
-		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
+	//	MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
 		//where to transition on the last frame
-		status.FrameNumberTransition = motion_sequence->numFrames();
-		// set transition to to fame 0 of the same motion sequence
-		status.FrameNumberTransitionTo = 0;
+		//status.FrameNumberTransition = motion_sequence->numFrames();
+		/// set transition to to fame 0 of the same motion sequence
+		//status.FrameNumberTransitionTo = 0;
 	}
 	//iterate the motio
 
@@ -172,7 +172,7 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
 
 		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TX), character_size_scale);
-		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
+		//motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TY), character_size_scale);
 		motion_sequence->scaleChannel(CHANNEL_ID(0, CT_TZ), character_size_scale);
 
 		if (motion_sequence == NULL)

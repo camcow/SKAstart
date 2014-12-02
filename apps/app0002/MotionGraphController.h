@@ -58,7 +58,7 @@ private:
 	long last_transition_frame=0;//first frame in current motion that was played when the last transition was taken
 	float frame_rate = 120.0f;
 
-	float character_size_scale = 0.3f;
+	float character_size_scale = 0.2f;
 
 	
 	
