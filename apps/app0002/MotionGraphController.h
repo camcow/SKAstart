@@ -16,18 +16,16 @@ using namespace std;
 
 class MotionGraphController : public MotionController
 {
-	// need to fix this and how to use it
 	struct state{
-		string SeqID;
+		string SeqID;// current sequence or filename of the motion sequence being played
 		int FrameNumber;// current frame number
 		int FrameNumberTransition; // what frame number is the transition
-		//int FramelengthSeq1;
 		string TransitionToSeqId;// seqId to transition to
 		int FrameNumberTransitionTo;// what frame to start on the new motion sequence
 		bool isTransitioning;
 	};
 	//used for transitioning sequence input
-	// the list or sequence of vertex targets will be saved in a vector.
+	// the list or sequence of vertex targets will be saved in a list.
 	struct vertexTargets
 	{ 
 		///motion A frame 2 ----to---- motion B frame 3;
@@ -45,31 +43,26 @@ class MotionGraphController : public MotionController
 	};
 
 private:
-	// contains all the motion sequences
-	vector<MotionSequenceContainer> MsVector;
-	MotionSequenceContainer cachedMSC;
+	vector<MotionSequenceContainer> MsVector;// contains all the motion sequences
 	MotionGraph g;
-	state status;
-	list<vertexTargets> path;
-	// used to loop through the path once again;
-	list<vertexTargets> pathBackup;
-	//curent vertex on graph for iterating purposes on graph
-	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;
-
-
+	state status;//status of the current playing animation
+	list<vertexTargets> path; // path the motion graph controller will take when animating
+	list<vertexTargets> pathBackup;// used to loop through the path once again;
+	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;//curent vertex on graph for iterating purposes on graph
 	float last_transition_time=0;// system time when the last transition was taken
 	long last_transition_frame=0;//first frame in current motion that was played when the last transition was taken
 	float frame_rate = 120.0f;
+	float character_size_scale = 0.2f;//the amount we need to scale the motion sequence
 
-	float character_size_scale = 0.2f;
-
-	
-	
 public:
 	MotionGraphController(MotionGraph &input);
+
 	~MotionGraphController();
 
+	//called by skeleton
 	virtual bool isValidChannel(CHANNEL_ID _channel, float _time);
+
+	//called by skeleton to get value
 	virtual float getValue(CHANNEL_ID _channel, float _time);
 
 	//get current frame of currently played motion sequence
@@ -77,9 +70,10 @@ public:
 
 	// takes in a vertex_descriptor then checks to see if it has any neighbors
 	bool isTransitionPoint(MotionGraph::DirectedGraph::vertex_descriptor m);
+
 	//reads in all the motion sequences
 	void readInMotionSequences();
-	
+
 	//searches whole graph for a specific point. 
 	MotionGraph::DirectedGraph::vertex_descriptor MotionGraphController::FindVertex(string sequenceID, int frameNumber);
 
@@ -89,10 +83,7 @@ public:
 	// used after transition to set the graph to the correct vertex
 	void transitionGraph();
 
-	// takes commands . 
-	//void takeTranistion(vector<#unknownTransitionStructure>);
-
-	// is it time to transition?
+	// is it time to transition? 
 	bool timeToTransition(float time);
 
 	//updates the information of the status variable to the next target;
@@ -102,79 +93,26 @@ public:
 	//returns the motionsequence container from ID
 	MotionSequenceContainer returnMotionSequenceContainerFromID(string ID);
 
+	// set the path the animation will follow
+	void setPath(list<vertexTargets> inputPath);
+
 	/*Debugging code and functions*/
 	/////////////////////////////////////////////////////////////////////////////////////
 
 	// only used before connections. Is to test weather inputting files is making frames connect linearly correctly.
 	bool testLinearOfMotionGraph(MotionGraph::DirectedGraph::vertex_descriptor m);
+
 	//reads all the frames of the graph
 	void readAllFrames();
+
 	//reads all the names of the MotionSequences MsVector
 	void readAllSequenceIDs();
 
 	// this is for testing with motion sequences
-	// only to be used if looping the same motion sequence
+	// only to be used if looping the same motion sequence, not if we are using multiple different motion sequences
 	int computeMotionSequenceFrame(MotionSequence *MS, float _time);
 
 	// print the status variable
 	void printStatus();
 };
-
-
-
-
-//graph whatever type it is
-//MotionGraph g;
-
 #endif
-
-/* cameron notes
-
-
-
-*/
-
-// need something find a vertex by filename and frame number on graph
-//look ahead and find the nearest transition points. this should return the filename and frame number or whole frame.
-//transition commands.
-//currently when inputting the things to the graph it is all un-connected. my code changed that 
-// we need to make each file's info have edges connect to each other.
-// we need a way to make each file have edges to its verticies in the graph, but not connect to the other files's verticies . 
-
-/*
-
-I think I have found such mechanism. It is called labeled_graph and is a part of BGL. Instead of using adjacency_list, one can use a predefined wrapper labeled_graph:
-
-typedef boost::labeled_graph<
-boost::adjacency_list< boost::vecS, boost::vecS, boost::directedS, Data >,
-std::string
-> Graph;
-After defining a graph like this, it is possible to access vertices in the following manner:
-
-Graph g;
-
-boost::add_vertex( "Alpha", g );
-g["Alpha"].name  = "Alpha";
-g["Alpha"].value = 10;
-
-boost::add_vertex( "Beta", g );
-g["Beta"].name  = "Beta";
-g["Beta"].value = 20;
-
-boost::add_edge_by_label( "Alpha", "Beta", g );
-
-The side effect of this is that one need to use graph() member function to make some algorithms work:
-
-std::vector< Graph::vertex_descriptor > container;
-boost::topological_sort( g.graph(), std::back_inserter( container ) ) ;
-
-For some reason, labeled_graph is not described in BGL documentation, but it appears in the example folder.
-
-
-
-*/
-
-//OLD CODE
-/*
-//finds the int place in the vector where this ID is stored in MsV
-int findSeqID(string ID);*/
