@@ -96,6 +96,7 @@ public:
 	// set the path the animation will follow
 	void setPath(list<vertexTargets> inputPath);
 
+	list<vertexTargets> getPath();
 	/*Debugging code and functions*/
 	/////////////////////////////////////////////////////////////////////////////////////
 

@@ -325,6 +325,10 @@ void  MotionGraphController::setPath(list<vertexTargets> inputPath)
 	path = inputPath;
 }
 
+list<MotionGraphController::vertexTargets> MotionGraphController::getPath()
+{
+	return(path);
+}
 void MotionGraphController::readInMotionSequences()
 {
 	cout << "reading motion Sequences" << endl;
