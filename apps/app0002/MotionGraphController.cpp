@@ -327,6 +327,7 @@ void  MotionGraphController::setPath(string startFileName, int startFrame ,list<
 	status.SeqID = startFileName;
 	status.FrameNumber = startFrame;
 	path = inputPath;
+	pathBackup = inputPath;
 }
 
 bool  MotionGraphController::updatePath(list<vertexTargets> inputPath)
@@ -346,6 +347,7 @@ bool  MotionGraphController::updatePath(list<vertexTargets> inputPath)
 	{
 		//set the path update variable. get value will update this after the next frame. 
 		path=inputPath;
+		pathBackup = inputPath;
 		status.FrameNumberTransition = temp.FrameNumber;
 		status.FrameNumberTransitionTo = temp.FrameNumber2;
 		status.TransitionToSeqId = temp.SeqID2;
