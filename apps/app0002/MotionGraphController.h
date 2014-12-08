@@ -13,7 +13,8 @@
 #include "DataManagement/DataManagementException.h"
 #include <Animation/AnimationException.h>
 using namespace std;
-
+// get first fiel to  and frame
+// 
 class MotionGraphController : public MotionController
 {
 	struct state{
@@ -48,6 +49,7 @@ private:
 	state status;//status of the current playing animation
 	list<vertexTargets> path; // path the motion graph controller will take when animating
 	list<vertexTargets> pathBackup;// used to loop through the path once again;
+	list<vertexTargets> pathUpdate;//updated path sent at random times. only overwrites path after a specific time;
 	MotionGraph::DirectedGraph::vertex_descriptor CurrentVertex;//curent vertex on graph for iterating purposes on graph
 	float last_transition_time=0;// system time when the last transition was taken
 	long last_transition_frame=0;//first frame in current motion that was played when the last transition was taken
@@ -58,6 +60,7 @@ public:
 	MotionGraphController(MotionGraph &input);
 
 	~MotionGraphController();
+
 
 	//called by skeleton
 	virtual bool isValidChannel(CHANNEL_ID _channel, float _time);
@@ -94,9 +97,17 @@ public:
 	MotionSequenceContainer returnMotionSequenceContainerFromID(string ID);
 
 	// set the path the animation will follow
-	void setPath(list<vertexTargets> inputPath);
+	void setPath(string startFileName, int startFrame ,list<vertexTargets> inputPath);
 
+	//update path during run time 
+	// returns false if it cannot update with the current path given to it
+	bool updatePath(list<vertexTargets> updatePath);
+	//get the current path
 	list<vertexTargets> getPath();
+
+	//get the status info
+	state getStatus();
+
 	/*Debugging code and functions*/
 	/////////////////////////////////////////////////////////////////////////////////////
 

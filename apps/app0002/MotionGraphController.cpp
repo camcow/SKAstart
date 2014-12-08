@@ -1,8 +1,10 @@
 #include "MotionGraphController.h"
+#include "Connector.h"
 
 MotionGraphController::MotionGraphController(MotionGraph &input)
 {
 	g = input;
+	Connector(g.allFrames.at(0), g.allFrames.at(1));
 	cout << "initializing Motion Graph Controller \n Reading all frames to test first \n then Checking for neighbors \n" << endl;
 	// pretty much tests to see if all frames are readable in the graph;
 	readAllFrames();
@@ -320,9 +322,41 @@ bool MotionGraphController::isTransitionPoint(MotionGraph::DirectedGraph::vertex
 	return(false);
 }
 
-void  MotionGraphController::setPath(list<vertexTargets> inputPath)
+void  MotionGraphController::setPath(string startFileName, int startFrame ,list<vertexTargets> inputPath)
 {
+	status.SeqID = startFileName;
+	status.FrameNumber = startFrame;
 	path = inputPath;
+}
+
+bool  MotionGraphController::updatePath(list<vertexTargets> inputPath)
+{
+	vertexTargets temp = inputPath.front();
+
+
+	//first seq
+// temp.frameNumber is the frame number we are transitioning on for the current seq
+	//we also need to see if the path includes that we are playing 
+	if (temp.FrameNumber <= status.FrameNumber||temp.SeqID!=status.SeqID)
+	{
+
+		return(false);
+	}
+	else
+	{
+		//set the path update variable. get value will update this after the next frame. 
+		path=inputPath;
+		status.FrameNumberTransition = temp.FrameNumber;
+		status.FrameNumberTransitionTo = temp.FrameNumber2;
+		status.TransitionToSeqId = temp.SeqID2;
+		//take the top off since we already updated it
+		inputPath.pop_front();
+		return(true);
+	}
+}
+MotionGraphController::state MotionGraphController::getStatus()
+{
+	return(status);
 }
 
 list<MotionGraphController::vertexTargets> MotionGraphController::getPath()
@@ -334,7 +368,7 @@ void MotionGraphController::readInMotionSequences()
 	cout << "reading motion Sequences" << endl;
 	namespace fs = ::boost::filesystem;
 
-	fs::path p(BVH_MOTION_FILE_PATH2);
+	fs::path p(BVH_MOTION_FILE_PATHMOTIONS);
 	if (!exists(p))    // does p actually exist?
 		cout << "doesn't exist" << endl;
 	fs::directory_iterator end_itr;
@@ -351,7 +385,7 @@ void MotionGraphController::readInMotionSequences()
 			cout << current_file << endl;
 
 			DataManager dataman;
-			dataman.addFileSearchPath(BVH_MOTION_FILE_PATH2);
+			dataman.addFileSearchPath(BVH_MOTION_FILE_PATHMOTIONS);
 			char* BVH_filename = NULL;
 			string character_BVH2(current_file);
 			try
