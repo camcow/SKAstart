@@ -4,7 +4,7 @@
 MotionGraphController::MotionGraphController(MotionGraph &input)
 {
 	g = input;
-	Connector(g.allFrames.at(0), g.allFrames.at(1));
+	//Connector(g.allFrames.at(0), g.allFrames.at(1));
 	cout << "initializing Motion Graph Controller \n Reading all frames to test first \n then Checking for neighbors \n" << endl;
 	// pretty much tests to see if all frames are readable in the graph;
 	readAllFrames();
@@ -26,7 +26,7 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	status.FrameNumberTransition = MS->numFrames();
 	status.FrameNumberTransitionTo = 0;
 	//temp vertex target list
-
+	/*
 	MotionGraphController::vertexTargets temp;
 	temp.SeqID = "swing5.bvh";
 	temp.SeqID2 = "swing6.bvh";
@@ -75,13 +75,13 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	temp.FrameNumber = MS4->numFrames();
 	temp.FrameNumber2 = 0;
 	path.push_back(temp);
-
+	
 
 	printStatus();
 	cout << "update status" << endl;
 	iterateStatus();
 	pathBackup = path;
-
+	*/
 	//set the current_vertex 
 	// only use once the names of the files MS match up with the names of the motion graph verticies 
 	//CurrentVertex = FindVertex(status.SeqID, status.FrameNumber); 
@@ -324,10 +324,13 @@ bool MotionGraphController::isTransitionPoint(MotionGraph::DirectedGraph::vertex
 
 void  MotionGraphController::setPath(string startFileName, int startFrame ,list<vertexTargets> inputPath)
 {
-	status.SeqID = startFileName;
-	status.FrameNumber = startFrame;
+	
 	path = inputPath;
 	pathBackup = inputPath;
+	iterateStatus();
+	status.SeqID = startFileName;
+	status.FrameNumber = startFrame;
+	iterateStatus();
 }
 
 bool  MotionGraphController::updatePath(list<vertexTargets> inputPath)

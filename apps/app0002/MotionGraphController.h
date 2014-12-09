@@ -25,8 +25,16 @@ class MotionGraphController : public MotionController
 		int FrameNumberTransitionTo;// what frame to start on the new motion sequence
 		bool isTransitioning;
 	};
+
+	struct MotionSequenceContainer
+	{
+		MotionSequence *MS;
+		string SeqID;
+	};
+
 	//used for transitioning sequence input
 	// the list or sequence of vertex targets will be saved in a list.
+public:
 	struct vertexTargets
 	{ 
 		///motion A frame 2 ----to---- motion B frame 3;
@@ -37,11 +45,7 @@ class MotionGraphController : public MotionController
 		 int FrameNumber2;
 	};
 
-	struct MotionSequenceContainer
-	{
-		MotionSequence *MS;
-		string SeqID;
-	};
+	
 
 private:
 	vector<MotionSequenceContainer> MsVector;// contains all the motion sequences
