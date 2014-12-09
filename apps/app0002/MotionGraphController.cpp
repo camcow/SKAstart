@@ -25,6 +25,9 @@ MotionGraphController::MotionGraphController(MotionGraph &input)
 	MS = returnMotionSequenceContainerFromID(status.SeqID).MS;
 	status.FrameNumberTransition = MS->numFrames();
 	status.FrameNumberTransitionTo = 0;
+
+
+
 	//temp vertex target list
 	/*
 	MotionGraphController::vertexTargets temp;
@@ -165,11 +168,22 @@ void MotionGraphController::iterateStatus()
 		//what frame we are transitioning to on the second seq;
 		status.FrameNumberTransitionTo = temp.FrameNumber2;
 	}
-	// none left so repeat
+	//let it play out
+	else if (status.isTransitioning==true)
+	{
+		status.SeqID = status.TransitionToSeqId;
+		status.FrameNumber = status.FrameNumberTransitionTo;
+		status.FrameNumberTransition = returnMotionSequenceContainerFromID(status.SeqID).MS->numFrames();
+		
+		status.isTransitioning = false;
+		printStatus();
+	
+	}// none left so repeat
 	else
 	{
-		path = pathBackup;
+			path = pathBackup;
 		iterateStatus();
+		printStatus();
 		return;
 		//status.isTransitioning = true;
 		// the last transition is now the new seqId aka what is playing
@@ -182,15 +196,51 @@ void MotionGraphController::iterateStatus()
 	}
 	//iterate the motio
 
-	//printStatus();
+	
 
 
 
 }
 
 float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
- 
-	if (status.isTransitioning &&  timeToTransition(_time))
+	//if it is not transitioning and its time to loop
+	if (!status.isTransitioning &&  timeToTransition(_time))
+	{
+		//iterateStatus();
+		int frame3 = computeCurrentFrame(_time);
+		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
+		if (motion_sequence == NULL)
+			throw AnimationException("MotionSequenceController has no attached MotionSequence");
+
+		if (!isValidChannel(_channel, _time))
+		{
+			string s = string("MotionSequenceController received request for invalid channel ")
+				+ " bone: " + toString(_channel.bone_id) + " dof: " + toString(_channel.channel_type);
+			throw AnimationException(s.c_str());
+		}
+
+//		int frame3 = computeCurrentFrame(_time);
+		//set this for currentFrameCalculations
+		last_transition_time = _time;
+		last_transition_frame = status.FrameNumberTransitionTo;
+		// set the frame number to the frame we transition to.
+		status.FrameNumber = status.FrameNumberTransitionTo;
+
+	//	int frame3 = computeCurrentFrame(_time);
+		float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
+
+		//transition the graph using status information
+		// only use when we have matching names of Motion sequences are the same as the filenames of the frames on the graph
+		// in this case we need to put the vertex descriptor back to its original spot
+		//transitionGraph();
+		printStatus();
+		//update the status
+		iterateStatus();
+		printStatus();
+		return(value);
+
+	}
+	else if (status.isTransitioning &&  timeToTransition(_time))
 	{
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.TransitionToSeqId).MS;
 		if (motion_sequence == NULL)
@@ -214,12 +264,13 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		//transition the graph using status information
 		// only use when we have matching names of Motion sequences are the same as the filenames of the frames on the graph
 		//transitionGraph();
-
+		printStatus();
 		//update the status
 		iterateStatus();
+		printStatus();
 		return(value);
 	}
-	//if it is transitioning but is not at the right time
+	//not at right time to transition
 	else{
 		MotionSequence *motion_sequence = returnMotionSequenceContainerFromID(status.SeqID).MS;
 
@@ -234,6 +285,11 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		}
 		int frame3 = computeCurrentFrame(_time);
 		float value = motion_sequence->getValue(_channel, computeCurrentFrame(_time));
+		if (frame3 > status.FrameNumber)
+		{
+
+			//printStatus();
+		}
 
 		//update status
 		status.FrameNumber = frame3;
@@ -241,7 +297,7 @@ float MotionGraphController::getValue(CHANNEL_ID _channel, float _time){
 		// only use when we have matching names of Motion sequences are the same as the filenames of the frames on the graph
 		//iterate graph
 		//iterateMotionGraph();
-
+	
 		return(value);
 	}
 }
@@ -330,7 +386,8 @@ void  MotionGraphController::setPath(string startFileName, int startFrame ,list<
 	iterateStatus();
 	status.SeqID = startFileName;
 	status.FrameNumber = startFrame;
-	iterateStatus();
+	printStatus();
+
 }
 
 bool  MotionGraphController::updatePath(list<vertexTargets> inputPath)
@@ -484,6 +541,7 @@ void MotionGraphController::readAllFrames()
 void MotionGraphController::printStatus()
 {
 
+
 	cout << "STATUS VARIABLE" << endl;
 	cout << "SeqID: " << status.SeqID << endl;
 	cout << "FrameNumber: " << status.FrameNumber << endl;
@@ -491,6 +549,17 @@ void MotionGraphController::printStatus()
 	cout << "TransitionToSeqId: " << status.TransitionToSeqId << endl;
 	cout << "FrameNumberTransitionTo: " << status.FrameNumberTransitionTo << endl;
 	cout << "isTransitioning: " << status.isTransitioning << endl;
+	std::ofstream outfile;
+
+	outfile.open("test.txt", std::ios_base::app);
+	outfile << "STATUS VARIABLE" << endl;
+	outfile << "SeqID: " << status.SeqID << endl;
+	outfile << "FrameNumber: " << status.FrameNumber << endl;
+	outfile << "FrameNumberTransition: " << status.FrameNumberTransition << endl;
+	outfile << "TransitionToSeqId: " << status.TransitionToSeqId << endl;
+	outfile << "FrameNumberTransitionTo: " << status.FrameNumberTransitionTo << endl;
+	outfile << "isTransitioning: " << status.isTransitioning << endl;
+
 }
 
 bool MotionGraphController::testLinearOfMotionGraph(MotionGraph::DirectedGraph::vertex_descriptor m)

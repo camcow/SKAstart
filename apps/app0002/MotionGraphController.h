@@ -84,9 +84,11 @@ public:
 	//searches whole graph for a specific point. 
 	MotionGraph::DirectedGraph::vertex_descriptor MotionGraphController::FindVertex(string sequenceID, int frameNumber);
 
+	//UNTESTED
 	//iterate graph to one vertex ahead or by one frame
 	void iterateMotionGraph();
 
+	//UNTESTED
 	// used after transition to set the graph to the correct vertex
 	void transitionGraph();
 
@@ -105,7 +107,9 @@ public:
 
 	//update path during run time 
 	// returns false if it cannot update with the current path given to it
+	//UNTESTED
 	bool updatePath(list<vertexTargets> updatePath);
+
 	//get the current path
 	list<vertexTargets> getPath();
 
